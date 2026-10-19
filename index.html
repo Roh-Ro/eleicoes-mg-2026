@@ -556,10 +556,14 @@
     .status-lost { background: #F1F5F9; color: #64748B; }
 
     /* TOOLTIP MAPA */
-    .leaflet-popup-content-wrapper {
+    .leaflet-tooltip {
+      background: #FFFFFF;
+      border: 1px solid #CBD5E1;
       border-radius: 10px;
-      box-shadow: 0 8px 22px rgba(0,0,0,0.22);
-      padding: 2px;
+      box-shadow: 0 8px 22px rgba(0,0,0,0.18);
+      padding: 10px 12px;
+      color: #1E293B;
+      pointer-events: none;
     }
 
     .popup-box {
@@ -1055,6 +1059,15 @@
       }
     }
 
+    let activeHoverLayer = null;
+
+    function resetActiveHover() {
+      if (activeHoverLayer && geojsonLayer) {
+        geojsonLayer.resetStyle(activeHoverLayer);
+        activeHoverLayer = null;
+      }
+    }
+
     // =========================================================================
     // MODO 1: MAPA DE VENCEDORES POR MUNICÍPIO (QUEM GANHOU EM CADA LUGAR)
     // =========================================================================
@@ -1138,6 +1151,7 @@
       updateWinnersLegend(winCounts);
 
       // Renderizar Mapa
+      activeHoverLayer = null;
       if (geojsonLayer) map.removeLayer(geojsonLayer);
 
       geojsonLayer = L.geoJSON(GEOJSON_DATA, {
@@ -1153,7 +1167,6 @@
           const winCand = currentCandByNum[winNum];
           const palette = getPartyColors(winCand ? winCand.party : '');
 
-          // Intensidade pela vantagem percentual
           let fillColor = palette.light;
           if (pct >= 55) fillColor = palette.strong;
           else if (pct >= 45) fillColor = palette.medium;
@@ -1171,58 +1184,52 @@
           const mun = MUNICIPALITIES[ibgeId] || { name: feature.properties.name, meso: '' };
           const s = munSummary[ibgeId] || { t: 0, w: [] };
 
-          const buildPopup = () => {
-            let rowsHtml = '';
-            s.w.slice(0, 4).forEach((entry, idx) => {
-              const c = currentCandByNum[entry[0]];
-              const v = entry[1];
-              const p = s.t > 0 ? ((v / s.t) * 100).toFixed(1) : '0.0';
-              const pal = getPartyColors(c ? c.party : '');
-              const medal = idx === 0 ? '🏆 ' : `${idx + 1}º `;
-              rowsHtml += `
-                <div class="popup-cand-row">
-                  <span class="popup-cand-name">
-                    <span class="popup-dot" style="background:${pal.medium}"></span>
-                    ${medal}${c ? c.display_name : entry[0]} <small style="color:#64748B">(${c ? c.party : ''})</small>
-                  </span>
-                  <span class="popup-cand-val">${p}% <small style="font-weight:500;color:#64748B">(${v.toLocaleString('pt-BR')})</small></span>
-                </div>
-              `;
-            });
-
-            return `
-              <div class="popup-box">
-                <h3>${mun.name}</h3>
-                <div class="popup-region">${mun.meso} • Votos válidos: ${s.t.toLocaleString('pt-BR')}</div>
-                ${rowsHtml}
+          let rowsHtml = '';
+          s.w.slice(0, 4).forEach((entry, idx) => {
+            const c = currentCandByNum[entry[0]];
+            const v = entry[1];
+            const p = s.t > 0 ? ((v / s.t) * 100).toFixed(1) : '0.0';
+            const pal = getPartyColors(c ? c.party : '');
+            const medal = idx === 0 ? '🏆 ' : `${idx + 1}º `;
+            rowsHtml += `
+              <div class="popup-cand-row">
+                <span class="popup-cand-name">
+                  <span class="popup-dot" style="background:${pal.medium}"></span>
+                  ${medal}${c ? c.display_name : entry[0]} <small style="color:#64748B">(${c ? c.party : ''})</small>
+                </span>
+                <span class="popup-cand-val">${p}% <small style="font-weight:500;color:#64748B">(${v.toLocaleString('pt-BR')})</small></span>
               </div>
             `;
-          };
+          });
+
+          const tooltipHtml = `
+            <div class="popup-box">
+              <h3>${mun.name}</h3>
+              <div class="popup-region">${mun.meso} • Votos válidos: ${s.t.toLocaleString('pt-BR')}</div>
+              ${rowsHtml}
+            </div>
+          `;
+
+          layer.bindTooltip(tooltipHtml, {
+            sticky: true,
+            direction: 'top',
+            offset: [0, -10],
+            opacity: 0.98
+          });
 
           layer.on({
             mouseover: function(e) {
-              if (window.innerWidth > 920) {
-                const l = e.target;
-                l.setStyle({ weight: 2.2, color: '#E5A823', fillOpacity: 0.98 });
-                l.bringToFront();
-                if (stateBorderLayer) stateBorderLayer.bringToFront();
-                l.bindPopup(buildPopup(), { closeButton: false, offset: L.point(0, -6) }).openPopup();
-              }
+              resetActiveHover();
+              activeHoverLayer = e.target;
+              activeHoverLayer.setStyle({ weight: 2, color: '#1E293B', fillOpacity: 1 });
             },
             mouseout: function(e) {
-              if (window.innerWidth > 920) {
-                geojsonLayer.resetStyle(e.target);
-                if (stateBorderLayer) stateBorderLayer.bringToFront();
-                map.closePopup();
-              }
+              resetActiveHover();
             },
             click: function(e) {
-              const l = e.target;
-              geojsonLayer.resetStyle();
-              l.setStyle({ weight: 2.5, color: '#E5A823', fillOpacity: 0.98 });
-              l.bringToFront();
-              if (stateBorderLayer) stateBorderLayer.bringToFront();
-              l.bindPopup(buildPopup(), { offset: L.point(0, -6) }).openPopup();
+              resetActiveHover();
+              activeHoverLayer = e.target;
+              activeHoverLayer.setStyle({ weight: 2.5, color: '#1E293B', fillOpacity: 1 });
               highlightTableRow(ibgeId);
             }
           });
@@ -1289,7 +1296,6 @@
         if (pct > maxPct) maxPct = pct;
         if (v > maxVotes) maxVotes = v;
 
-        // Descobrir posição do candidato no município
         let posMun = '-';
         if (s.w) {
           const idx = s.w.findIndex(x => x[0] === cand.number);
@@ -1329,10 +1335,9 @@
       document.getElementById('kpi-3-value').textContent = `${winsCount} vitórias`;
       document.getElementById('kpi-3-sub').textContent = `Votado em ${presencaCount} de 853 mun.`;
 
-      // Atualizar Legenda Individual (Escuro onde ganhou, Claro onde perdeu)
       updateSingleCandidateLegend(cand, palette);
 
-      // Renderizar Mapa
+      activeHoverLayer = null;
       if (geojsonLayer) map.removeLayer(geojsonLayer);
 
       geojsonLayer = L.geoJSON(GEOJSON_DATA, {
@@ -1347,10 +1352,8 @@
           if (v === 0) {
             fillColor = '#F8FAF8';
           } else if (won) {
-            // Ganhou no município: tons fortes e escuros
             fillColor = pct >= 50 ? palette.strong : palette.medium;
           } else {
-            // Não ficou em 1º lugar (perdeu no município): tons claros/suaves
             if (pct >= 30) fillColor = palette.light;
             else if (pct >= 10) fillColor = palette.pale;
             else fillColor = '#E2E8F0';
@@ -1374,47 +1377,41 @@
           const leaderNum = (s.w && s.w.length > 0) ? s.w[0][0] : null;
           const leaderCand = leaderNum ? currentCandByNum[leaderNum] : null;
 
-          const buildPopup = () => {
-            const statusHtml = won
-              ? `<span class="status-pill status-won">🏆 1º Lugar no Município</span>`
-              : `<span class="status-pill status-lost">1º Lugar: ${leaderCand ? leaderCand.display_name : 'N/D'}</span>`;
+          const statusHtml = won
+            ? `<span class="status-pill status-won">🏆 1º Lugar no Município</span>`
+            : `<span class="status-pill status-lost">1º Lugar: ${leaderCand ? leaderCand.display_name : 'N/D'}</span>`;
 
-            return `
-              <div class="popup-box">
-                <h3>${mun.name}</h3>
-                <div class="popup-region">${mun.meso}</div>
-                <div style="margin-bottom:6px;">${statusHtml}</div>
-                <div><strong>${cand.display_name} (${cand.party})</strong></div>
-                <div class="popup-single-votes">${pct}% <small style="font-size:12px;font-weight:600;color:#475569;">(${v.toLocaleString('pt-BR')} votos)</small></div>
-                <div style="font-size:10.5px;color:#64748B;margin-top:4px;">Total de votos válidos na cidade: ${s.t.toLocaleString('pt-BR')}</div>
-              </div>
-            `;
-          };
+          const tooltipHtml = `
+            <div class="popup-box">
+              <h3>${mun.name}</h3>
+              <div class="popup-region">${mun.meso}</div>
+              <div style="margin-bottom:6px;">${statusHtml}</div>
+              <div><strong>${cand.display_name} (${cand.party})</strong></div>
+              <div class="popup-single-votes">${pct}% <small style="font-size:12px;font-weight:600;color:#475569;">(${v.toLocaleString('pt-BR')} votos)</small></div>
+              <div style="font-size:10.5px;color:#64748B;margin-top:4px;">Total de votos válidos na cidade: ${s.t.toLocaleString('pt-BR')}</div>
+            </div>
+          `;
+
+          layer.bindTooltip(tooltipHtml, {
+            sticky: true,
+            direction: 'top',
+            offset: [0, -10],
+            opacity: 0.98
+          });
 
           layer.on({
             mouseover: function(e) {
-              if (window.innerWidth > 920) {
-                const l = e.target;
-                l.setStyle({ weight: 2.2, color: '#E5A823', fillOpacity: 0.98 });
-                l.bringToFront();
-                if (stateBorderLayer) stateBorderLayer.bringToFront();
-                l.bindPopup(buildPopup(), { closeButton: false, offset: L.point(0, -6) }).openPopup();
-              }
+              resetActiveHover();
+              activeHoverLayer = e.target;
+              activeHoverLayer.setStyle({ weight: 2, color: '#1E293B', fillOpacity: 1 });
             },
             mouseout: function(e) {
-              if (window.innerWidth > 920) {
-                geojsonLayer.resetStyle(e.target);
-                if (stateBorderLayer) stateBorderLayer.bringToFront();
-                map.closePopup();
-              }
+              resetActiveHover();
             },
             click: function(e) {
-              const l = e.target;
-              geojsonLayer.resetStyle();
-              l.setStyle({ weight: 2.5, color: '#E5A823', fillOpacity: 0.98 });
-              l.bringToFront();
-              if (stateBorderLayer) stateBorderLayer.bringToFront();
-              l.bindPopup(buildPopup(), { offset: L.point(0, -6) }).openPopup();
+              resetActiveHover();
+              activeHoverLayer = e.target;
+              activeHoverLayer.setStyle({ weight: 2.5, color: '#1E293B', fillOpacity: 1 });
               highlightTableRow(ibgeId);
             }
           });
@@ -1562,7 +1559,10 @@
       geojsonLayer.eachLayer(layer => {
         if (layer.feature && layer.feature.properties.id === ibgeId) {
           map.fitBounds(layer.getBounds(), { maxZoom: 9.5, padding: [30, 30] });
-          layer.fire('click');
+          resetActiveHover();
+          activeHoverLayer = layer;
+          layer.setStyle({ weight: 2.5, color: '#1E293B', fillOpacity: 1 });
+          layer.openTooltip();
         }
       });
     }
