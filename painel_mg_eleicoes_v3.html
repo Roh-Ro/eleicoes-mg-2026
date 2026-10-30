@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Painel Eleições 2026 MG | Versão Acessível & Raio-X Municipal</title>
+  <title>Painel Eleições 2026 • Guia dos Municípios</title>
   
   <!-- Leaflet CSS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -827,14 +827,19 @@
 
     .raiox-winners-grid {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 10px;
+      grid-template-columns: 1fr;
+      gap: 12px;
     }
 
     .raiox-deputies-grid {
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
+      grid-template-columns: 1fr;
+      gap: 14px;
+    }
+
+    /* FICHA EXCLUSIVA DE IMPRESSÃO A4 (OCULTA NA TELA, EXIBIDA APENAS NA IMPRESSÃO) */
+    #raiox-print-sheet {
+      display: none;
     }
 
     table.raiox-compact-table {
@@ -849,8 +854,8 @@
     table.raiox-compact-table th {
       background: #F1F5F9;
       color: #0F172A;
-      padding: 6px 8px;
-      font-size: calc(11px * var(--font-scale));
+      padding: 8px 12px;
+      font-size: calc(11.5px * var(--font-scale));
       font-weight: 800;
       text-transform: uppercase;
       text-align: left;
@@ -858,9 +863,9 @@
     }
 
     table.raiox-compact-table td {
-      padding: 5px 8px;
+      padding: 6px 12px;
       border-bottom: 1px solid #E2E8F0;
-      font-size: calc(12.5px * var(--font-scale));
+      font-size: calc(13px * var(--font-scale));
       color: #1E293B;
       vertical-align: middle;
     }
@@ -981,7 +986,9 @@
       border-color: var(--brand-dark);
     }
 
-    /* IMPRESSÃO A4 LIMPA DO RAIO-X DA CIDADE */
+    /* =========================================================================
+       IMPRESSÃO A4 EXECUTIVA EM PÁGINA ÚNICA (1/1 - SEM FOLHAS EM BRANCO)
+       ========================================================================= */
     @media print {
       * {
         -webkit-print-color-adjust: exact !important;
@@ -989,74 +996,124 @@
       }
       @page {
         size: A4 portrait;
-        margin: 8mm;
+        margin: 6mm 8mm;
       }
-      body * {
-        visibility: hidden;
-      }
-      #raiox-backdrop, #raiox-backdrop * {
-        visibility: visible;
-      }
-      #raiox-backdrop {
-        position: absolute;
-        inset: 0;
-        background: #FFFFFF !important;
-        padding: 0 !important;
-        display: block !important;
-      }
-      .raiox-modal {
-        box-shadow: none !important;
-        border: 2px solid #0F172A !important;
-        max-height: none !important;
+      html, body {
         width: 100% !important;
-        max-width: 100% !important;
+        height: auto !important;
+        min-height: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
         overflow: visible !important;
+        background: #FFFFFF !important;
       }
-      .raiox-header {
+      /* Remove completamente todo o dashboard de fundo do fluxo de impressão (evita as 40 páginas em branco!) */
+      header,
+      .mobile-tab-bar,
+      .dashboard-body,
+      #raiox-backdrop {
+        display: none !important;
+      }
+      #raiox-print-sheet {
+        display: block !important;
+        width: 100% !important;
+        background: #FFFFFF !important;
+        color: #0F172A !important;
+        font-family: 'Inter', sans-serif !important;
+        page-break-after: avoid !important;
+        page-break-before: avoid !important;
+        page-break-inside: avoid !important;
+      }
+      .print-sheet-header {
         background: #003B23 !important;
         color: #FFFFFF !important;
-        padding: 10px 16px !important;
+        padding: 8px 14px !important;
+        border-radius: 6px !important;
+        border-bottom: 3px solid #E5A823 !important;
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        margin-bottom: 6px !important;
       }
-      .raiox-header h2 {
+      .print-sheet-header h1 {
+        font-family: 'Montserrat', sans-serif !important;
+        font-size: 16px !important;
+        font-weight: 800 !important;
+        margin: 0 !important;
         color: #FFFFFF !important;
-        font-size: 18px !important;
       }
-      .raiox-header p {
-        color: #FEF3C7 !important;
-        font-size: 11.5px !important;
-      }
-      .raiox-body {
-        padding: 10px 14px !important;
-        gap: 10px !important;
-        overflow: visible !important;
-      }
-      .raiox-virada-alert {
-        padding: 8px 12px !important;
-        font-size: 11.5px !important;
-      }
-      .raiox-section-title {
-        font-size: 12px !important;
-        margin-bottom: 5px !important;
-        padding-bottom: 2px !important;
-      }
-      .raiox-winners-grid {
-        grid-template-columns: repeat(3, 1fr) !important;
-        gap: 8px !important;
-      }
-      .raiox-deputies-grid {
-        grid-template-columns: 1fr 1fr !important;
-        gap: 10px !important;
-      }
-      table.raiox-compact-table th {
-        padding: 4px 6px !important;
-        font-size: 10px !important;
-      }
-      table.raiox-compact-table td {
-        padding: 3.5px 6px !important;
+      .print-sheet-header p {
         font-size: 10.5px !important;
+        color: #FEF3C7 !important;
+        margin: 2px 0 0 0 !important;
+        font-weight: 600 !important;
       }
-      .btn-close-modal, .raiox-footer {
-        display: none !important;
+      .print-sheet-badge {
+        background: rgba(255,255,255,0.14) !important;
+        border: 1px solid #E5A823 !important;
+        color: #FFFFFF !important;
+        padding: 4px 8px !important;
+        border-radius: 5px !important;
+        font-size: 9.5px !important;
+        font-weight: 700 !important;
+        text-align: right !important;
+      }
+      .print-virada-bar {
+        padding: 5px 10px !important;
+        border-radius: 5px !important;
+        border: 1px solid #CBD5E1 !important;
+        border-left: 4px solid #005A36 !important;
+        background: #F8FAFC !important;
+        font-size: 10.5px !important;
+        margin-bottom: 7px !important;
+        line-height: 1.3 !important;
+      }
+      .print-block-title {
+        font-family: 'Montserrat', sans-serif !important;
+        font-size: 10.5px !important;
+        font-weight: 800 !important;
+        color: #003B23 !important;
+        text-transform: uppercase !important;
+        border-bottom: 1.5px solid #005A36 !important;
+        padding-bottom: 2px !important;
+        margin: 6px 0 4px 0 !important;
+        letter-spacing: 0.2px !important;
+      }
+      table.print-table {
+        width: 100% !important;
+        border-collapse: collapse !important;
+        border: 1px solid #CBD5E1 !important;
+        margin-bottom: 4px !important;
+      }
+      table.print-table th {
+        background: #E2E8F0 !important;
+        color: #0F172A !important;
+        font-size: 9px !important;
+        font-weight: 800 !important;
+        text-transform: uppercase !important;
+        padding: 3.5px 6px !important;
+        text-align: left !important;
+        border-bottom: 1px solid #94A3B8 !important;
+      }
+      table.print-table td {
+        padding: 2.8px 6px !important;
+        font-size: 9.8px !important;
+        color: #0F172A !important;
+        border-bottom: 1px solid #E2E8F0 !important;
+        vertical-align: middle !important;
+      }
+      table.print-table tr:nth-child(even) td {
+        background: #F8FAFC !important;
+      }
+      .print-footer-note {
+        margin-top: 5px !important;
+        padding-top: 4px !important;
+        border-top: 1px solid #CBD5E1 !important;
+        display: flex !important;
+        justify-content: space-between !important;
+        font-size: 8.5px !important;
+        color: #64748B !important;
+        font-weight: 600 !important;
       }
     }
 
@@ -1103,7 +1160,7 @@
         font-size: 13px;
       }
       .header-nav-row {
-        padding: 6px 8px;
+        padding: 8px;
         gap: 8px;
         flex-direction: column;
         align-items: stretch;
@@ -1111,23 +1168,19 @@
       .turn-label {
         display: none;
       }
+      /* Todos os 7 botões visíveis na tela em grade compacta, sem corte lateral */
       .turn-buttons-group {
         display: flex;
-        flex-wrap: nowrap;
-        overflow-x: auto;
-        gap: 6px;
-        padding-bottom: 2px;
-        -webkit-overflow-scrolling: touch;
-        scrollbar-width: none;
-      }
-      .turn-buttons-group::-webkit-scrollbar {
-        display: none;
+        flex-wrap: wrap;
+        gap: 5px;
+        width: 100%;
       }
       .btn-mode {
-        flex-shrink: 0;
+        flex: 1 1 auto;
+        justify-content: center;
         white-space: nowrap;
-        padding: 7px 12px;
-        font-size: 13px;
+        padding: 7px 9px;
+        font-size: 12.5px;
       }
       .city-finder-wrap {
         min-width: 100%;
@@ -1255,8 +1308,8 @@
       <div class="brand-section">
         <div class="brand-logo-badge">MINAS <span>GERAIS</span></div>
         <div class="header-titles">
-          <h1>Painel Eleições 2026 • Guia Fácil dos Municípios</h1>
-          <p>Toque em qualquer cidade no mapa para abrir o Raio-X Completo</p>
+          <h1>Guia dos Municípios • Eleições 2026</h1>
+          <p>Toque em qualquer cidade no mapa ou na lista para abrir o Raio-X Completo</p>
         </div>
       </div>
 
@@ -1280,7 +1333,7 @@
           2º Turno (Final)
         </button>
         <button id="mode-virada" class="btn-mode virada-btn" onclick="setQuickMode('VIRADA')">
-          🔄 Onde Houve Virada (76 cidades)
+          🔄 Viradas (76)
         </button>
         <button id="mode-gov" class="btn-mode" onclick="setQuickMode('GOV')">
           🏅 Governador
@@ -1289,10 +1342,10 @@
           🏛️ Senador
         </button>
         <button id="mode-dep-fed" class="btn-mode" onclick="setQuickMode('DEP_FED')">
-          🏛️ Deputados Federais
+          🏛️ Dep. Federais
         </button>
         <button id="mode-dep-est" class="btn-mode" onclick="setQuickMode('DEP_EST')">
-          🏛️ Deputados Estaduais
+          🏛️ Dep. Estaduais
         </button>
       </div>
 
@@ -1395,7 +1448,7 @@
     </div>
   </div>
 
-  <!-- 3. MODAL "RAIO-X DA CIDADE" -->
+  <!-- 3. MODAL "RAIO-X DA CIDADE" (NA TELA: UM ACIMA DO OUTRO, LARGURA TOTAL) -->
   <div id="raiox-backdrop" class="modal-backdrop" onclick="if(event.target===this) closeRaioXModal()">
     <div class="raiox-modal">
       <div class="raiox-header">
@@ -1411,13 +1464,16 @@
       </div>
 
       <div class="raiox-footer">
-        <span style="font-size:13px;color:#475569;font-weight:600;">Dica: Você pode imprimir esta ficha ou salvar como PDF em folha A4.</span>
+        <span style="font-size:13px;color:#475569;font-weight:600;">Dica: A impressão gera uma Ficha Oficial A4 em 1 única página (sem folhas extras).</span>
         <button class="btn-print-raiox" onclick="window.print()">
-          📄 Salvar ou Imprimir Resumo (A4)
+          📄 Salvar ou Imprimir Resumo (1 Página A4)
         </button>
       </div>
     </div>
   </div>
+
+  <!-- 4. FICHA EXCLUSIVA DE IMPRESSÃO A4 (1 PÁGINA, UM ACIMA DO OUTRO) -->
+  <div id="raiox-print-sheet"></div>
 
   <!-- Leaflet JS -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -2371,7 +2427,7 @@
     }
 
     // =========================================================================
-    // MÓDULO 3: MODAL "RAIO-X DA CIDADE" (TABELAS FORMAIS COMPACTAS: TOP 3 MAJORITÁRIOS + TOP 10 DEPUTADOS)
+    // MÓDULO 3: MODAL "RAIO-X DA CIDADE" + FICHA DE IMPRESSÃO A4 DE 1 PÁGINA (TUDO UM ACIMA DO OUTRO)
     // =========================================================================
     function openRaioXModal(ibgeId) {
       const m = V3_CORE.mun_lookup[ibgeId];
@@ -2387,18 +2443,21 @@
       const w2Pal = getPartyColors(vr.w2 === '22' ? 'PL' : 'PT');
 
       let viradaBoxHtml = '';
+      let printViradaText = '';
       if (vr.tp === 'VIROU_13' || vr.tp === 'VIROU_22') {
         viradaBoxHtml = `
           <div class="raiox-virada-alert" style="border-left-color:#D97706;">
             🔄 <strong>VIRADA NO 2º TURNO:</strong> No 1º turno venceu <strong>${w1Name} (${vr.p1}%)</strong>, mas no 2º turno <strong>${w2Name}</strong> virou e venceu com <strong>${vr.p2}%</strong> (${vr.v2.toLocaleString('pt-BR')} votos — vantagem de ${vr.df.toLocaleString('pt-BR')} votos).
           </div>
         `;
+        printViradaText = `🔄 <strong>VIRADA NO 2º TURNO:</strong> No 1º turno venceu <strong>${w1Name} (${vr.p1}%)</strong>, mas no 2º turno <strong>${w2Name}</strong> virou e venceu com <strong>${vr.p2}%</strong> (${vr.v2.toLocaleString('pt-BR')} votos — vantagem de ${vr.df.toLocaleString('pt-BR')} votos).`;
       } else {
         viradaBoxHtml = `
           <div class="raiox-virada-alert" style="border-left-color:${w2Pal.strong};">
             ✅ <strong>RESUMO PRESIDENCIAL (1º ➔ 2º TURNO):</strong> <strong>${w2Name}</strong> venceu nos dois turnos na cidade — <strong>${vr.p1}%</strong> no 1º turno e <strong>${vr.p2}%</strong> no 2º turno (${vr.v2.toLocaleString('pt-BR')} votos, vantagem de ${vr.df.toLocaleString('pt-BR')} votos).
           </div>
         `;
+        printViradaText = `✅ <strong>RESUMO PRESIDENCIAL (1º ➔ 2º TURNO):</strong> <strong>${w2Name}</strong> manteve a liderança nos dois turnos na cidade — <strong>${vr.p1}%</strong> no 1º turno e <strong>${vr.p2}%</strong> no 2º turno (${vr.v2.toLocaleString('pt-BR')} votos, vantagem de ${vr.df.toLocaleString('pt-BR')} votos).`;
       }
 
       const getCandInfo = (cargoCode, entry) => {
@@ -2407,7 +2466,7 @@
         return info;
       };
 
-      // Tabela compacta formal para Top 3 de cada cargo majoritário (Presidente, Governador, Senador)
+      // 1. TABELAS EMPILHADAS (UMA ACIMA DA OUTRA) PARA O CARD RESUMO NA TELA
       const buildMajorTopTable = (title, cargoCode, entries, totalValid) => {
         let rowsHtml = '';
         (entries || []).slice(0, 3).forEach((entry, idx) => {
@@ -2415,20 +2474,19 @@
           const pal = getPartyColors(info.party);
           const pct = totalValid > 0 ? ((entry[1] / totalValid) * 100).toFixed(1) : '0.0';
           rowsHtml += `
-            <tr style="border-left:4px solid ${pal.strong};">
-              <td style="font-weight:800;color:${pal.strong};width:24px;">${idx + 1}º</td>
+            <tr style="border-left:5px solid ${pal.strong};">
+              <td style="font-weight:800;color:${pal.strong};width:36px;">${idx + 1}º</td>
               <td>
-                <div style="display:flex;align-items:center;gap:6px;">
-                  ${getCandPhotoHtml(cargoCode, info.sq, info.name, info.party, 24)}
+                <div style="display:flex;align-items:center;gap:10px;">
+                  ${getCandPhotoHtml(cargoCode, info.sq, info.name, info.party, 30)}
                   <div>
-                    <div style="font-weight:800;color:#0F172A;line-height:1.15;">${info.name}</div>
-                    <div><span class="party-pill" style="background:${pal.badge};font-size:9.5px;padding:1px 5px;">${info.party}</span></div>
+                    <span style="font-weight:800;color:#0F172A;">${info.name}</span>
+                    <span class="party-pill" style="background:${pal.badge};font-size:10px;padding:1.5px 6px;margin-left:5px;">${info.party}</span>
                   </div>
                 </div>
               </td>
               <td style="text-align:right;white-space:nowrap;font-weight:800;color:${pal.strong};">
-                ${pct}%<br>
-                <small style="color:#475569;font-weight:600;">${entry[1].toLocaleString('pt-BR')}</small>
+                ${pct}% <span style="color:#475569;font-weight:600;margin-left:4px;">(${entry[1].toLocaleString('pt-BR')} votos)</span>
               </td>
             </tr>
           `;
@@ -2437,8 +2495,9 @@
           <table class="raiox-compact-table">
             <thead>
               <tr>
-                <th colspan="2">${title}</th>
-                <th style="text-align:right;">% / Votos</th>
+                <th style="width:36px;">Pos.</th>
+                <th>${title}</th>
+                <th style="text-align:right;">% e Votos na Cidade</th>
               </tr>
             </thead>
             <tbody>${rowsHtml}</tbody>
@@ -2446,7 +2505,6 @@
         `;
       };
 
-      // Tabela compacta formal para Top 10 Deputados (Federais e Estaduais lado a lado na mesma página)
       const buildDepTop10Table = (title, cargoCode, entries, totalValid) => {
         let rowsHtml = '';
         (entries || []).slice(0, 10).forEach((entry, idx) => {
@@ -2455,20 +2513,20 @@
           const pct = totalValid > 0 ? ((entry[1] / totalValid) * 100).toFixed(1) : '0.0';
           const statusClass = info.status === 'ELEITO' ? 'badge-eleito' : 'badge-suplente';
           rowsHtml += `
-            <tr style="border-left:4px solid ${pal.strong};">
-              <td style="font-weight:800;color:${pal.strong};width:26px;">${idx + 1}º</td>
+            <tr style="border-left:5px solid ${pal.strong};">
+              <td style="font-weight:800;color:${pal.strong};width:36px;">${idx + 1}º</td>
               <td>
-                <div style="display:flex;align-items:center;gap:7px;">
-                  ${getCandPhotoHtml(cargoCode, info.sq, info.name, info.party, 25)}
-                  <div style="line-height:1.15;">
+                <div style="display:flex;align-items:center;gap:10px;">
+                  ${getCandPhotoHtml(cargoCode, info.sq, info.name, info.party, 30)}
+                  <div>
                     <span style="font-weight:800;color:#0F172A;">${info.name}</span>
-                    <span class="party-pill" style="background:${pal.badge};font-size:9.5px;padding:1px 5px;margin-left:3px;">${info.party}</span>
+                    <span class="party-pill" style="background:${pal.badge};font-size:10px;padding:1.5px 6px;margin-left:5px;">${info.party}</span>
                   </div>
                 </div>
               </td>
-              <td style="width:68px;"><span class="badge-status ${statusClass}" style="font-size:9.5px;padding:2px 6px;">${info.status}</span></td>
+              <td style="width:90px;"><span class="badge-status ${statusClass}" style="font-size:10px;padding:2px 7px;">${info.status}</span></td>
               <td style="text-align:right;white-space:nowrap;font-weight:800;color:${pal.strong};">
-                ${entry[1].toLocaleString('pt-BR')} <small style="color:#475569;font-weight:600;">(${pct}%)</small>
+                ${entry[1].toLocaleString('pt-BR')} <span style="color:#475569;font-weight:600;">(${pct}%)</span>
               </td>
             </tr>
           `;
@@ -2477,10 +2535,10 @@
           <table class="raiox-compact-table">
             <thead>
               <tr>
-                <th>#</th>
+                <th style="width:36px;">Pos.</th>
                 <th>${title}</th>
-                <th>Situação</th>
-                <th style="text-align:right;">Votos (%)</th>
+                <th style="width:90px;">Situação</th>
+                <th style="text-align:right;">Votos (% na Cidade)</th>
               </tr>
             </thead>
             <tbody>${rowsHtml}</tbody>
@@ -2492,20 +2550,164 @@
         ${viradaBoxHtml}
 
         <div>
-          <div class="raiox-section-title">🏆 Cargos Majoritários na Cidade (Presidente, Governador e Top 3 Senador)</div>
+          <div class="raiox-section-title">🏆 Cargos Majoritários em ${m.name} (Presidente, Governador e Top 3 Senador)</div>
           <div class="raiox-winners-grid">
-            ${buildMajorTopTable('Presidente (2º Turno)', '1_t2', rx.t2.w, rx.t2.t)}
-            ${buildMajorTopTable('Governador (Top 3)', '3', rx.gov.w, rx.gov.t)}
-            ${buildMajorTopTable('Senador (Top 3)', '5', rx.sen.w, rx.sen.t)}
+            ${buildMajorTopTable('Presidente da República (2º Turno)', '1_t2', rx.t2.w, rx.t2.t)}
+            ${buildMajorTopTable('Governador de Minas Gerais (Top 3 na Cidade)', '3', rx.gov.w, rx.gov.t)}
+            ${buildMajorTopTable('Senador da República (Top 3 na Cidade)', '5', rx.sen.w, rx.sen.t)}
           </div>
         </div>
 
         <div>
-          <div class="raiox-section-title">🏛️ Top 10 Deputados Mais Votados em ${m.name} (Federal e Estadual)</div>
+          <div class="raiox-section-title">🏛️ Top 10 Deputados Federais Mais Votados em ${m.name}</div>
           <div class="raiox-deputies-grid">
-            ${buildDepTop10Table('Deputados Federais (Top 10)', '6', rx.fed.w, rx.fed.t)}
-            ${buildDepTop10Table('Deputados Estaduais (Top 10)', '7', rx.est.w, rx.est.t)}
+            ${buildDepTop10Table('Candidato a Deputado Federal / Partido', '6', rx.fed.w, rx.fed.t)}
           </div>
+        </div>
+
+        <div>
+          <div class="raiox-section-title">🏛️ Top 10 Deputados Estaduais Mais Votados em ${m.name}</div>
+          <div class="raiox-deputies-grid">
+            ${buildDepTop10Table('Candidato a Deputado Estadual / Partido', '7', rx.est.w, rx.est.t)}
+          </div>
+        </div>
+      `;
+
+      // 2. CONSTRUIR FICHA EXCLUSIVA DE IMPRESSÃO A4 (1 ÚNICA PÁGINA, BLOCOS EMPILHADOS UM ACIMA DO OUTRO)
+      const formatPrintMajorCell = (cargoCode, entry, totalValid, rankLabel) => {
+        if (!entry) return `<span style="color:#94A3B8;">—</span>`;
+        const info = getCandInfo(cargoCode, entry);
+        const pal = getPartyColors(info.party);
+        const pct = totalValid > 0 ? ((entry[1] / totalValid) * 100).toFixed(1) : '0.0';
+        return `
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;">
+            <div style="display:flex;align-items:center;gap:5px;">
+              ${getCandPhotoHtml(cargoCode, info.sq, info.name, info.party, 20)}
+              <div>
+                <span style="font-weight:800;color:#0F172A;font-size:9.8px;">${rankLabel} ${info.name}</span>
+                <span class="party-pill" style="background:${pal.badge};font-size:8px;padding:1px 4px;margin-left:3px;">${info.party}</span>
+              </div>
+            </div>
+            <div style="text-align:right;white-space:nowrap;font-weight:800;color:${pal.strong};font-size:9.8px;">
+              ${pct}% <span style="color:#475569;font-weight:600;font-size:8.8px;">(${entry[1].toLocaleString('pt-BR')})</span>
+            </div>
+          </div>
+        `;
+      };
+
+      const buildPrintDepRows = (cargoCode, entries, totalValid) => {
+        let trs = '';
+        (entries || []).slice(0, 10).forEach((entry, idx) => {
+          const info = getCandInfo(cargoCode, entry);
+          const pal = getPartyColors(info.party);
+          const pct = totalValid > 0 ? ((entry[1] / totalValid) * 100).toFixed(1) : '0.0';
+          const statusClass = info.status === 'ELEITO' ? 'badge-eleito' : 'badge-suplente';
+          trs += `
+            <tr style="border-left:3.5px solid ${pal.strong};">
+              <td style="width:28px;font-weight:800;color:${pal.strong};">${idx + 1}º</td>
+              <td>
+                <div style="display:flex;align-items:center;gap:6px;">
+                  ${getCandPhotoHtml(cargoCode, info.sq, info.name, info.party, 18)}
+                  <span style="font-weight:800;color:#0F172A;">${info.name}</span>
+                  <span class="party-pill" style="background:${pal.badge};font-size:8px;padding:1px 4px;">${info.party}</span>
+                </div>
+              </td>
+              <td style="width:74px;"><span class="badge-status ${statusClass}" style="font-size:8px;padding:1.5px 5px;">${info.status}</span></td>
+              <td style="width:110px;text-align:right;font-weight:800;color:${pal.strong};">${entry[1].toLocaleString('pt-BR')} votos</td>
+              <td style="width:65px;text-align:right;font-weight:700;color:#334155;">${pct}%</td>
+            </tr>
+          `;
+        });
+        return trs;
+      };
+
+      const pT2 = rx.t2.w || [];
+      const pGov = rx.gov.w || [];
+      const pSen = rx.sen.w || [];
+
+      document.getElementById('raiox-print-sheet').innerHTML = `
+        <div class="print-sheet-header">
+          <div>
+            <h1>📍 Município de ${m.name} — Guia dos Municípios (MG 2026)</h1>
+            <p>Mesorregião: ${m.meso} • Votos Válidos (2º Turno): ${rx.t2.t.toLocaleString('pt-BR')} eleitores</p>
+          </div>
+          <div class="print-sheet-badge">
+            FICHA EXECUTIVA MUNICIPAL<br>
+            <span style="color:#FEF3C7;">Página Única A4</span>
+          </div>
+        </div>
+
+        <div class="print-virada-bar">
+          ${printViradaText}
+        </div>
+
+        <div class="print-block-title">1. Cargos Majoritários no Município (Presidente, Governador e Senador — Top 3)</div>
+        <table class="print-table">
+          <thead>
+            <tr>
+              <th style="width:115px;">Cargo</th>
+              <th>1º Colocado na Cidade</th>
+              <th>2º Colocado na Cidade</th>
+              <th>3º Colocado na Cidade</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style="font-weight:800;color:#003B23;">Presidente (2ºT)</td>
+              <td>${formatPrintMajorCell('1_t2', pT2[0], rx.t2.t, '1º')}</td>
+              <td>${formatPrintMajorCell('1_t2', pT2[1], rx.t2.t, '2º')}</td>
+              <td><span style="color:#64748B;font-size:9px;">1º Turno Vencedor: ${w1Name} (${vr.p1}%)</span></td>
+            </tr>
+            <tr>
+              <td style="font-weight:800;color:#003B23;">Governador</td>
+              <td>${formatPrintMajorCell('3', pGov[0], rx.gov.t, '1º')}</td>
+              <td>${formatPrintMajorCell('3', pGov[1], rx.gov.t, '2º')}</td>
+              <td>${formatPrintMajorCell('3', pGov[2], rx.gov.t, '3º')}</td>
+            </tr>
+            <tr>
+              <td style="font-weight:800;color:#003B23;">Senador</td>
+              <td>${formatPrintMajorCell('5', pSen[0], rx.sen.t, '1º')}</td>
+              <td>${formatPrintMajorCell('5', pSen[1], rx.sen.t, '2º')}</td>
+              <td>${formatPrintMajorCell('5', pSen[2], rx.sen.t, '3º')}</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="print-block-title">2. Top 10 Deputados Federais Mais Votados em ${m.name}</div>
+        <table class="print-table">
+          <thead>
+            <tr>
+              <th style="width:28px;">Pos.</th>
+              <th>Candidato a Deputado Federal / Partido</th>
+              <th style="width:74px;">Situação MG</th>
+              <th style="width:110px;text-align:right;">Votos na Cidade</th>
+              <th style="width:65px;text-align:right;">% Válidos</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${buildPrintDepRows('6', rx.fed.w, rx.fed.t)}
+          </tbody>
+        </table>
+
+        <div class="print-block-title">3. Top 10 Deputados Estaduais Mais Votados em ${m.name}</div>
+        <table class="print-table">
+          <thead>
+            <tr>
+              <th style="width:28px;">Pos.</th>
+              <th>Candidato a Deputado Estadual / Partido</th>
+              <th style="width:74px;">Situação MG</th>
+              <th style="width:110px;text-align:right;">Votos na Cidade</th>
+              <th style="width:65px;text-align:right;">% Válidos</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${buildPrintDepRows('7', rx.est.w, rx.est.t)}
+          </tbody>
+        </table>
+
+        <div class="print-footer-note">
+          <span>Fonte Oficial: Tribunal Superior Eleitoral (TSE) • Eleições Gerais 2026 (1º e 2º Turnos)</span>
+          <span>Guia dos Municípios • Minas Gerais (853 Municípios) — Página 1 de 1</span>
         </div>
       `;
 
