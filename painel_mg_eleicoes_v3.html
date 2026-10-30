@@ -2434,7 +2434,7 @@
       const rx = V3_CORE.raiox[ibgeId];
       if (!m || !rx) return;
 
-      document.getElementById('rx-city-name').textContent = `📍 Município de ${m.name}`;
+      document.getElementById('rx-city-name').textContent = `Município de ${m.name}`;
       document.getElementById('rx-city-sub').textContent = `Região: ${m.meso} • Total de Votos Válidos (2º Turno): ${rx.t2.t.toLocaleString('pt-BR')} eleitores`;
 
       const vr = rx.vr;
@@ -2447,46 +2447,63 @@
       if (vr.tp === 'VIROU_13' || vr.tp === 'VIROU_22') {
         viradaBoxHtml = `
           <div class="raiox-virada-alert" style="border-left-color:#D97706;">
-            🔄 <strong>VIRADA NO 2º TURNO:</strong> No 1º turno venceu <strong>${w1Name} (${vr.p1}%)</strong>, mas no 2º turno <strong>${w2Name}</strong> virou e venceu com <strong>${vr.p2}%</strong> (${vr.v2.toLocaleString('pt-BR')} votos — vantagem de ${vr.df.toLocaleString('pt-BR')} votos).
+            <strong>VIRADA NO 2º TURNO:</strong> No 1º turno venceu <strong>${w1Name} (${vr.p1}%)</strong>, mas no 2º turno <strong>${w2Name}</strong> virou e venceu com <strong>${vr.p2}%</strong> (${vr.v2.toLocaleString('pt-BR')} votos — vantagem de ${vr.df.toLocaleString('pt-BR')} votos).
           </div>
         `;
-        printViradaText = `🔄 <strong>VIRADA NO 2º TURNO:</strong> No 1º turno venceu <strong>${w1Name} (${vr.p1}%)</strong>, mas no 2º turno <strong>${w2Name}</strong> virou e venceu com <strong>${vr.p2}%</strong> (${vr.v2.toLocaleString('pt-BR')} votos — vantagem de ${vr.df.toLocaleString('pt-BR')} votos).`;
+        printViradaText = `<strong>VIRADA NO 2º TURNO:</strong> No 1º turno venceu <strong>${w1Name} (${vr.p1}%)</strong>, mas no 2º turno <strong>${w2Name}</strong> virou e venceu com <strong>${vr.p2}%</strong> (${vr.v2.toLocaleString('pt-BR')} votos — vantagem de ${vr.df.toLocaleString('pt-BR')} votos).`;
       } else {
         viradaBoxHtml = `
           <div class="raiox-virada-alert" style="border-left-color:${w2Pal.strong};">
-            ✅ <strong>RESUMO PRESIDENCIAL (1º ➔ 2º TURNO):</strong> <strong>${w2Name}</strong> venceu nos dois turnos na cidade — <strong>${vr.p1}%</strong> no 1º turno e <strong>${vr.p2}%</strong> no 2º turno (${vr.v2.toLocaleString('pt-BR')} votos, vantagem de ${vr.df.toLocaleString('pt-BR')} votos).
+            <strong>RESUMO PRESIDENCIAL (1º ➔ 2º TURNO):</strong> <strong>${w2Name}</strong> venceu nos dois turnos na cidade — <strong>${vr.p1}%</strong> no 1º turno e <strong>${vr.p2}%</strong> no 2º turno (${vr.v2.toLocaleString('pt-BR')} votos, vantagem de ${vr.df.toLocaleString('pt-BR')} votos).
           </div>
         `;
-        printViradaText = `✅ <strong>RESUMO PRESIDENCIAL (1º ➔ 2º TURNO):</strong> <strong>${w2Name}</strong> manteve a liderança nos dois turnos na cidade — <strong>${vr.p1}%</strong> no 1º turno e <strong>${vr.p2}%</strong> no 2º turno (${vr.v2.toLocaleString('pt-BR')} votos, vantagem de ${vr.df.toLocaleString('pt-BR')} votos).`;
+        printViradaText = `<strong>RESUMO PRESIDENCIAL (1º ➔ 2º TURNO):</strong> <strong>${w2Name}</strong> manteve a liderança nos dois turnos na cidade — <strong>${vr.p1}%</strong> no 1º turno e <strong>${vr.p2}%</strong> no 2º turno (${vr.v2.toLocaleString('pt-BR')} votos, vantagem de ${vr.df.toLocaleString('pt-BR')} votos).`;
       }
 
       const getCandInfo = (cargoCode, entry) => {
         if (!entry) return { name: '-', party: '', votes: 0, pct: '0.0', status: '', sq: '' };
-        const info = V3_CORE.cand_lookup[`${cargoCode}_${entry[0]}`] || { name: entry[0], party: '', status: '', sq: '' };
-        return info;
+        const key = `${cargoCode}_${entry[0]}`;
+        if (V3_CORE.cand_lookup[key]) return V3_CORE.cand_lookup[key];
+        const cargoObj = CARGO_CACHE[cargoCode];
+        if (cargoObj && cargoObj.candidates) {
+          const found = cargoObj.candidates.find(c => c.number === String(entry[0]));
+          if (found) return { name: found.ballot_name, party: found.party, status: found.status_label || '', sq: found.sq || '' };
+        }
+        return { name: entry[0], party: '', status: '', sq: '' };
       };
 
+      const t1Mun = (CARGO_CACHE['1'] && CARGO_CACHE['1'].mun_summary && CARGO_CACHE['1'].mun_summary[ibgeId]) || rx.t1 || { t: rx.t2.t, w: [] };
+      const pT1 = t1Mun.w || [];
+      const pT2 = rx.t2.w || [];
+      const pGov = rx.gov.w || [];
+      const pSen = rx.sen.w || [];
+
       // 1. TABELAS EMPILHADAS (UMA ACIMA DA OUTRA) PARA O CARD RESUMO NA TELA
-      const buildMajorTopTable = (title, cargoCode, entries, totalValid) => {
+      const buildMajorTopTable = (title, cargoCode, entries, totalValid, extraThirdItem = null) => {
         let rowsHtml = '';
-        (entries || []).slice(0, 3).forEach((entry, idx) => {
-          const info = getCandInfo(cargoCode, entry);
+        const list = (entries || []).slice(0, 3).map(e => ({ cargoCode, entry: e, totalValid, suffix: '' }));
+        if (list.length === 2 && extraThirdItem && extraThirdItem.entry) {
+          list.push(extraThirdItem);
+        }
+        list.forEach((item, idx) => {
+          const info = getCandInfo(item.cargoCode, item.entry);
           const pal = getPartyColors(info.party);
-          const pct = totalValid > 0 ? ((entry[1] / totalValid) * 100).toFixed(1) : '0.0';
+          const pct = item.totalValid > 0 ? ((item.entry[1] / item.totalValid) * 100).toFixed(1) : '0.0';
           rowsHtml += `
             <tr style="border-left:5px solid ${pal.strong};">
               <td style="font-weight:800;color:${pal.strong};width:36px;">${idx + 1}º</td>
               <td>
                 <div style="display:flex;align-items:center;gap:10px;">
-                  ${getCandPhotoHtml(cargoCode, info.sq, info.name, info.party, 30)}
+                  ${getCandPhotoHtml(item.cargoCode, info.sq, info.name, info.party, 30)}
                   <div>
                     <span style="font-weight:800;color:#0F172A;">${info.name}</span>
                     <span class="party-pill" style="background:${pal.badge};font-size:10px;padding:1.5px 6px;margin-left:5px;">${info.party}</span>
+                    ${item.suffix ? `<small style="color:#64748B;font-weight:700;margin-left:4px;">${item.suffix}</small>` : ''}
                   </div>
                 </div>
               </td>
               <td style="text-align:right;white-space:nowrap;font-weight:800;color:${pal.strong};">
-                ${pct}% <span style="color:#475569;font-weight:600;margin-left:4px;">(${entry[1].toLocaleString('pt-BR')} votos)</span>
+                ${pct}% <span style="color:#475569;font-weight:600;margin-left:4px;">(${item.entry[1].toLocaleString('pt-BR')} votos)</span>
               </td>
             </tr>
           `;
@@ -2550,23 +2567,23 @@
         ${viradaBoxHtml}
 
         <div>
-          <div class="raiox-section-title">🏆 Cargos Majoritários em ${m.name} (Presidente, Governador e Top 3 Senador)</div>
+          <div class="raiox-section-title">1. Cargos Majoritários em ${m.name} (Presidente, Governador e Top 3 Senador)</div>
           <div class="raiox-winners-grid">
-            ${buildMajorTopTable('Presidente da República (2º Turno)', '1_t2', rx.t2.w, rx.t2.t)}
-            ${buildMajorTopTable('Governador de Minas Gerais (Top 3 na Cidade)', '3', rx.gov.w, rx.gov.t)}
-            ${buildMajorTopTable('Senador da República (Top 3 na Cidade)', '5', rx.sen.w, rx.sen.t)}
+            ${buildMajorTopTable('Presidente da República', '1_t2', pT2, rx.t2.t, { cargoCode: '1', entry: pT1[2], totalValid: t1Mun.t, suffix: '(1º Turno)' })}
+            ${buildMajorTopTable('Governador de Minas Gerais (Top 3 na Cidade)', '3', pGov, rx.gov.t)}
+            ${buildMajorTopTable('Senador da República (Top 3 na Cidade)', '5', pSen, rx.sen.t)}
           </div>
         </div>
 
         <div>
-          <div class="raiox-section-title">🏛️ Top 10 Deputados Federais Mais Votados em ${m.name}</div>
+          <div class="raiox-section-title">2. Top 10 Deputados Federais Mais Votados em ${m.name}</div>
           <div class="raiox-deputies-grid">
             ${buildDepTop10Table('Candidato a Deputado Federal / Partido', '6', rx.fed.w, rx.fed.t)}
           </div>
         </div>
 
         <div>
-          <div class="raiox-section-title">🏛️ Top 10 Deputados Estaduais Mais Votados em ${m.name}</div>
+          <div class="raiox-section-title">3. Top 10 Deputados Estaduais Mais Votados em ${m.name}</div>
           <div class="raiox-deputies-grid">
             ${buildDepTop10Table('Candidato a Deputado Estadual / Partido', '7', rx.est.w, rx.est.t)}
           </div>
@@ -2621,19 +2638,11 @@
         return trs;
       };
 
-      const pT2 = rx.t2.w || [];
-      const pGov = rx.gov.w || [];
-      const pSen = rx.sen.w || [];
-
       document.getElementById('raiox-print-sheet').innerHTML = `
         <div class="print-sheet-header">
           <div>
-            <h1>📍 Município de ${m.name} — Guia dos Municípios (MG 2026)</h1>
+            <h1>Município de ${m.name} — Guia dos Municípios (MG 2026)</h1>
             <p>Mesorregião: ${m.meso} • Votos Válidos (2º Turno): ${rx.t2.t.toLocaleString('pt-BR')} eleitores</p>
-          </div>
-          <div class="print-sheet-badge">
-            FICHA EXECUTIVA MUNICIPAL<br>
-            <span style="color:#FEF3C7;">Página Única A4</span>
           </div>
         </div>
 
@@ -2643,29 +2652,21 @@
 
         <div class="print-block-title">1. Cargos Majoritários no Município (Presidente, Governador e Senador — Top 3)</div>
         <table class="print-table">
-          <thead>
-            <tr>
-              <th style="width:115px;">Cargo</th>
-              <th>1º Colocado na Cidade</th>
-              <th>2º Colocado na Cidade</th>
-              <th>3º Colocado na Cidade</th>
-            </tr>
-          </thead>
           <tbody>
             <tr>
-              <td style="font-weight:800;color:#003B23;">Presidente (2ºT)</td>
+              <td style="width:95px;font-weight:800;color:#003B23;">Presidente</td>
               <td>${formatPrintMajorCell('1_t2', pT2[0], rx.t2.t, '1º')}</td>
               <td>${formatPrintMajorCell('1_t2', pT2[1], rx.t2.t, '2º')}</td>
-              <td><span style="color:#64748B;font-size:9px;">1º Turno Vencedor: ${w1Name} (${vr.p1}%)</span></td>
+              <td>${formatPrintMajorCell('1', pT1[2], t1Mun.t, '3º (1ºT)')}</td>
             </tr>
             <tr>
-              <td style="font-weight:800;color:#003B23;">Governador</td>
+              <td style="width:95px;font-weight:800;color:#003B23;">Governador</td>
               <td>${formatPrintMajorCell('3', pGov[0], rx.gov.t, '1º')}</td>
               <td>${formatPrintMajorCell('3', pGov[1], rx.gov.t, '2º')}</td>
               <td>${formatPrintMajorCell('3', pGov[2], rx.gov.t, '3º')}</td>
             </tr>
             <tr>
-              <td style="font-weight:800;color:#003B23;">Senador</td>
+              <td style="width:95px;font-weight:800;color:#003B23;">Senador</td>
               <td>${formatPrintMajorCell('5', pSen[0], rx.sen.t, '1º')}</td>
               <td>${formatPrintMajorCell('5', pSen[1], rx.sen.t, '2º')}</td>
               <td>${formatPrintMajorCell('5', pSen[2], rx.sen.t, '3º')}</td>
@@ -2679,7 +2680,7 @@
             <tr>
               <th style="width:28px;">Pos.</th>
               <th>Candidato a Deputado Federal / Partido</th>
-              <th style="width:74px;">Situação MG</th>
+              <th style="width:74px;">Situação</th>
               <th style="width:110px;text-align:right;">Votos na Cidade</th>
               <th style="width:65px;text-align:right;">% Válidos</th>
             </tr>
@@ -2695,7 +2696,7 @@
             <tr>
               <th style="width:28px;">Pos.</th>
               <th>Candidato a Deputado Estadual / Partido</th>
-              <th style="width:74px;">Situação MG</th>
+              <th style="width:74px;">Situação</th>
               <th style="width:110px;text-align:right;">Votos na Cidade</th>
               <th style="width:65px;text-align:right;">% Válidos</th>
             </tr>
